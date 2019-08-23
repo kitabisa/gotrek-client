@@ -78,7 +78,7 @@ func (c *trekClient) Publish(auditID string, trail map[string]interface{}, times
 		return err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.clientSecret))
+	req.Header.Set("X-Client-Secret", c.clientSecret)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
