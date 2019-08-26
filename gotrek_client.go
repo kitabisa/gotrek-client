@@ -16,6 +16,7 @@ import (
 
 type TrekClient interface {
 	Publish(auditID string, trail map[string]interface{}, timestamp int64, tag string) error
+	SetClientInfo(version, name string)
 }
 
 type trekClient struct {
