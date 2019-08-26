@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/gojektech/heimdall"
 	"github.com/gojektech/heimdall/httpclient"
 )
@@ -17,9 +19,11 @@ type TrekClient interface {
 }
 
 type trekClient struct {
-	url          string
-	clientSecret string
-	httpClient   *httpclient.Client
+	url           string
+	clientSecret  string
+	httpClient    *httpclient.Client
+	clientVersion string
+	clientName    string
 }
 
 type TrekHttpClient struct {
@@ -35,6 +39,11 @@ func NewTrekClient(url, clientSecret string, t *TrekHttpClient) TrekClient {
 		clientSecret: clientSecret,
 		httpClient:   newTrekHttpClient(t),
 	}
+}
+
+func (c *trekClient) SetClientInfo(version, name string) {
+	c.clientName = name
+	c.clientVersion = version
 }
 
 func newTrekHttpClient(t *TrekHttpClient) *httpclient.Client {
@@ -78,7 +87,25 @@ func (c *trekClient) Publish(auditID string, trail map[string]interface{}, times
 		return err
 	}
 
+	id, err := uuid.NewUUID()
+	if err != nil {
+		return err
+	}
+
+	var clientName = "GotrekClient"
+	var clientVersion = "1.0.0"
+	if c.clientName != "" {
+		clientName = c.clientName
+	}
+
+	if c.clientVersion != "" {
+		clientVersion = c.clientVersion
+	}
+
 	req.Header.Set("X-Client-Secret", c.clientSecret)
+	req.Header.Set("X-Ktbs-Request-ID", id.String())
+	req.Header.Set("X-Ktbs-Client-Name", clientName)
+	req.Header.Set("X-Ktbs-Client-Version", clientVersion)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
